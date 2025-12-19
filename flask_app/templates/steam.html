@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Steam{% endblock %}
+{% block content %}
+  <h1>Steam Settings</h1>
+
+  <h2>1) Save your Steam ID</h2>
+  <form method="POST">
+    {{ steam_form.hidden_tag() }}
+    <p>{{ steam_form.steam_id.label }}<br>{{ steam_form.steam_id(size=40) }}</p>
+    <p>{{ steam_form.submit() }}</p>
+  </form>
+
+  <h2>2) Sync your library</h2>
+  <form method="POST">
+    {{ sync_form.hidden_tag() }}
+    <p>{{ sync_form.submit() }}</p>
+  </form>
+
+  <p><strong>Owned games stored:</strong> {{ owned_count }}</p>
+  <p><strong>Last sync:</strong> {{ last_sync }}</p>
+{% endblock %}

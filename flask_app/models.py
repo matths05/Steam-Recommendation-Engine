@@ -10,6 +10,10 @@ class User(db.Document, UserMixin):
 
     friend_steam_id = db.StringField()
 
+    steam_id = db.StringField()
+    owned_games = db.ListField(db.DictField(), default=list)   # each dict: {"appid": int, "playtime_forever": int}
+    last_sync = db.DateTimeField()
+
     # This tells MongoEngine which collection name to use (optional but nice)
     meta = {"collection": "users"}
 
