@@ -17,5 +17,16 @@
   </form>
 
   <p><strong>Owned games stored:</strong> {{ owned_count }}</p>
+  {% if top_games and top_games|length > 0 %}
+    <h2>Top Played Games</h2>
+    <ol>
+        {% for g in top_games %}
+        <li>
+            {{ g.name or ("AppID " ~ g.appid) }} —
+            {{ (g.playtime_forever or 0) // 60 }} hours
+        </li>
+        {% endfor %}
+    </ol>
+{% endif %}
   <p><strong>Last sync:</strong> {{ last_sync }}</p>
 {% endblock %}

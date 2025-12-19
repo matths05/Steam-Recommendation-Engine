@@ -68,7 +68,11 @@ def steam_settings():
 
         current_user.steam_id = steamid64  # normalize stored ID to SteamID64
         current_user.owned_games = [
-            {"appid": g.get("appid"), "playtime_forever": g.get("playtime_forever", 0)}
+            {
+                "appid": g.get("appid"),
+                "name": g.get("name"),
+                "playtime_forever": g.get("playtime_forever", 0),
+            }
             for g in games
             if g.get("appid") is not None
         ]
@@ -77,12 +81,19 @@ def steam_settings():
 
         return redirect(url_for("profile.steam_settings"))
 
+    owned = current_user.owned_games or []
+    top_games = sorted(
+        owned,
+        key=lambda x: x.get("playtime_forever", 0),
+        reverse=True
+    )[:10]
 
     return render_template(
         "steam.html",
         steam_form=steam_form,
         sync_form=sync_form,
-        owned_count=len(current_user.owned_games or []),
-        last_sync=current_user.last_sync
+        owned_count=len(owned),
+        last_sync=current_user.last_sync,
+        top_games=top_games,
     )
 

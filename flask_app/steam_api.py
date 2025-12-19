@@ -50,7 +50,7 @@ def get_owned_games(steamid64: str) -> list[dict]:
     params = {
         "key": _get_key(),
         "steamid": steamid64,
-        "include_appinfo": 0,
+        "include_appinfo": 1,
         "include_played_free_games": 1,
     }
     r = requests.get(url, params=params, timeout=15)
