@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
-from .models import Game
+from .models import Game, User
 from flask_wtf import FlaskForm
+from sklearn.neighbors import NearestNeighbors
+from .recommender import build_tag_vocab, build_training_data, user_to_vector
 
 engine = Blueprint("engine", __name__, url_prefix="/engine")
 
@@ -130,4 +132,151 @@ def wishlist():
 
     form = EmptyForm()
     return render_template("wishlist.html", games=ordered, form=form)
+
+@engine.route("/train_model")
+@login_required
+def train_model():
+    vocab = build_tag_vocab()
+    user_ids, X = build_training_data(vocab)
+
+    # Save each user's calculated_vector in MongoDB (so you can show you computed it)
+    # Recompute per user so it matches same vocab
+    for uid in user_ids:
+        u = User.objects(id=uid).first()
+        if u:
+            u.calculated_vector = user_to_vector(u, vocab)
+            u.save()
+
+    return {
+        "tags_in_vocab": len(vocab),
+        "users_trained": len(user_ids),
+        "note": "Vectors stored in users.calculated_vector. KNN fitting happens in recommendations route."
+    }
+
+@engine.route("/knn_recommendations")
+@login_required
+def knn_recommendations():
+    vocab = build_tag_vocab()
+    user_ids, X = build_training_data(vocab)
+
+    # Need at least 2 users for "neighbors"
+    if len(user_ids) < 2:
+        return {
+            "error": "Need at least 2 users with preference data to run KNN. Create another account and set preferences.",
+            "users_trained": len(user_ids)
+        }
+
+    # Fit KNN (cosine distance)
+    knn = NearestNeighbors(n_neighbors=min(5, len(user_ids)), metric="cosine")
+    knn.fit(X)
+
+    me_vec = user_to_vector(current_user, vocab)
+    distances, indices = knn.kneighbors([me_vec], n_neighbors=min(5, len(user_ids)))
+
+    # Map neighbor indices -> User docs (skip yourself)
+    neighbor_ids = []
+    for i in indices[0]:
+        uid = user_ids[i]
+        if uid != str(current_user.id):
+            neighbor_ids.append(uid)
+
+    neighbors = list(User.objects(id__in=neighbor_ids))
+
+    # Recommend games neighbors pinned (simple + demo-friendly)
+    my_owned_ids = {g.get("appid") for g in (current_user.owned_games or []) if g.get("appid") is not None}
+    my_pins = set(current_user.pinned_games or [])
+
+    candidate_scores = {}  # appid -> score
+    for n in neighbors:
+        for appid in (n.pinned_games or []):
+            if appid in my_owned_ids or appid in my_pins:
+                continue
+            candidate_scores[appid] = candidate_scores.get(appid, 0) + 1
+
+    # Look up game details
+    rec_ids = sorted(candidate_scores.keys(), key=lambda a: candidate_scores[a], reverse=True)[:10]
+    games = list(Game.objects(appid__in=rec_ids))
+    by_id = {g.appid: g for g in games}
+
+    recs = []
+    for appid in rec_ids:
+        g = by_id.get(appid)
+        if g:
+            recs.append({
+                "appid": appid,
+                "name": g.name,
+                "tags": g.tags,
+                "global_rating": g.global_rating,
+                "neighbor_votes": candidate_scores[appid],
+            })
+
+    return {
+        "neighbors_used": [str(n.email) for n in neighbors],
+        "recommendations": recs
+    }
+
+@engine.route("/knn", methods=["GET"])
+@login_required
+def knn_page():
+    vocab = build_tag_vocab()
+    user_ids, X = build_training_data(vocab)
+
+    if len(user_ids) < 2:
+        return render_template("knn.html", error="Need at least 2 users with preferences.", neighbors=[], recs=[], form=EmptyForm())
+
+    knn = NearestNeighbors(n_neighbors=min(5, len(user_ids)), metric="cosine")
+    knn.fit(X)
+
+    me_vec = user_to_vector(current_user, vocab)
+    distances, indices = knn.kneighbors([me_vec], n_neighbors=min(5, len(user_ids)))
+
+    neighbors_info = []
+    neighbor_ids = []
+    for dist, idx in zip(distances[0], indices[0]):
+        uid = user_ids[idx]
+        if uid == str(current_user.id):
+            continue
+        neighbor_ids.append(uid)
+        neighbors_info.append({"user_id": uid, "distance": float(dist), "similarity": round(1 - float(dist), 3)})
+
+    neighbors = list(User.objects(id__in=neighbor_ids).only("email", "pinned_games"))
+    by_id = {str(u.id): u for u in neighbors}
+
+    # Recommend neighbor pinned games
+    my_owned_ids = {g.get("appid") for g in (current_user.owned_games or []) if g.get("appid") is not None}
+    my_pins = set(current_user.pinned_games or [])
+
+    votes = {}
+    for info in neighbors_info:
+        u = by_id.get(info["user_id"])
+        if not u:
+            continue
+        for appid in (u.pinned_games or []):
+            if appid in my_owned_ids or appid in my_pins:
+                continue
+            votes[appid] = votes.get(appid, 0) + 1
+
+    rec_ids = sorted(votes.keys(), key=lambda a: votes[a], reverse=True)[:10]
+    games = list(Game.objects(appid__in=rec_ids))
+    by_game = {g.appid: g for g in games}
+
+    recs = []
+    for appid in rec_ids:
+        g = by_game.get(appid)
+        if g:
+            recs.append({"appid": appid, "name": g.name, "tags": g.tags, "votes": votes[appid]})
+
+    # Add neighbor emails
+    for info in neighbors_info:
+        u = by_id.get(info["user_id"])
+        info["email"] = u.email if u else "(unknown)"
+
+    return render_template(
+        "knn.html",
+        error=None,
+        neighbors=neighbors_info,
+        recs=recs,
+        pinned=set(current_user.pinned_games or []),
+        form=EmptyForm()
+    )
 

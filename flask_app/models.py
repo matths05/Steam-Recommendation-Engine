@@ -18,7 +18,9 @@ class User(db.Document, UserMixin):
     meta = {"collection": "users"}
 
     pinned_games = db.ListField(db.IntField(), default=list)
-    
+
+    calculated_vector = db.ListField(db.FloatField(), default=list)
+
     def get_id(self):
         # Flask-Login needs a string ID
         return str(self.id)

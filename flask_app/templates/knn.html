@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}KNN Recommendations{% endblock %}
+
+{% block content %}
+  <h1>KNN Recommendations</h1>
+
+  {% if error %}
+    <p>{{ error }}</p>
+  {% else %}
+    <h2>Nearest Neighbors</h2>
+    <ul>
+      {% for n in neighbors %}
+        <li>{{ n.email }} — similarity: {{ n.similarity }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Recommended from Neighbors</h2>
+    {% if recs and recs|length > 0 %}
+      <ol>
+        {% for r in recs %}
+          <li>
+            <strong>{{ r.name }}</strong> (neighbor votes: {{ r.votes }})<br>
+            Tags: {{ r.tags|join(", ") if r.tags else "None" }}
+
+            {% if r.appid in pinned %}
+              <em> Pinned</em>
+            {% else %}
+              <form method="POST" action="{{ url_for('engine.pin', appid=r.appid) }}" style="display:inline;">
+                {{ form.hidden_tag() }}
+                <button type="submit">Pin</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p>No neighbor-based recommendations yet. Try pinning games on another account.</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

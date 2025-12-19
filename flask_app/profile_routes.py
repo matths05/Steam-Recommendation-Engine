@@ -3,6 +3,9 @@ from flask_login import login_required, current_user
 from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm
 from datetime import datetime
 from .steam_api import get_owned_games, resolve_to_steamid64
+from .models import Game
+from .steam_store_api import fetch_app_details
+
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -77,6 +80,17 @@ def steam_settings():
             if g.get("appid") is not None
         ]
         current_user.last_sync = datetime.utcnow()
+
+        # Enrich Games collection for owned appids (cap to avoid hammering API)
+        owned_appids = [g["appid"] for g in current_user.owned_games[:50]]  # start with 50
+        existing = set(Game.objects(appid__in=owned_appids).scalar("appid"))
+
+        for appid in owned_appids:
+            if appid not in existing:
+                details = fetch_app_details(appid)
+                if details:
+                    Game(appid=details["appid"], name=details["name"], tags=details["tags"], global_rating=0.0).save()
+
         current_user.save()
 
         return redirect(url_for("profile.steam_settings"))
