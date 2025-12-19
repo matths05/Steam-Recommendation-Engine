@@ -1,13 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Preferences{% endblock %}
 {% block content %}
-  <h1>Preferences</h1>
-  <form method="POST">
-    {{ form.hidden_tag() }}
+  <div class="form-container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Your Preferences</h1>
+    <p class="text-muted" style="text-align: center; margin-bottom: 30px;">
+      Set your favorite and disliked game tags to personalize recommendations.
+    </p>
+    <form method="POST">
+      {{ form.hidden_tag() }}
 
-    <p>{{ form.favorite_tags.label }}<br>{{ form.favorite_tags(size=8) }}</p>
-    <p>{{ form.hated_tags.label }}<br>{{ form.hated_tags(size=8) }}</p>
+      <div class="form-group">
+        {{ form.favorite_tags.label(class="form-label") }}
+        {{ form.favorite_tags(class="form-input", placeholder="e.g., Action, Adventure, RPG (comma-separated)") }}
+        {% if form.favorite_tags.errors %}
+          {% for error in form.favorite_tags.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+        <div style="font-size: 12px; color: var(--steam-text-muted); margin-top: 5px;">
+          Enter tags you love, separated by commas
+        </div>
+      </div>
 
-    <p>{{ form.submit() }}</p>
-  </form>
+      <div class="form-group">
+        {{ form.hated_tags.label(class="form-label") }}
+        {{ form.hated_tags(class="form-input", placeholder="e.g., Horror, Sports (comma-separated)") }}
+        {% if form.hated_tags.errors %}
+          {% for error in form.hated_tags.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+        <div style="font-size: 12px; color: var(--steam-text-muted); margin-top: 5px;">
+          Enter tags you want to avoid, separated by commas
+        </div>
+      </div>
+
+      {{ form.submit(class="btn btn-primary form-submit") }}
+    </form>
+  </div>
 {% endblock %}

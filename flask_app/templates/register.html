@@ -1,14 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Register{% endblock %}
+{% block title %}Register - Steam Recommendation Engine{% endblock %}
 {% block content %}
-  <h1>Register</h1>
-  <form method="POST">
-    {{ form.hidden_tag() }}
+  <div class="form-container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Create Account</h1>
+    <form method="POST">
+      {{ form.hidden_tag() }}
 
-    <p>{{ form.email.label }}<br>{{ form.email(size=32) }}</p>
-    <p>{{ form.password.label }}<br>{{ form.password(size=32) }}</p>
-    <p>{{ form.confirm_password.label }}<br>{{ form.confirm_password(size=32) }}</p>
+      <div class="form-group">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-input", placeholder="Enter your email") }}
+        {% if form.email.errors %}
+          {% for error in form.email.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
 
-    <p>{{ form.submit() }}</p>
-  </form>
+      <div class="form-group">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-input", placeholder="Enter your password") }}
+        {% if form.password.errors %}
+          {% for error in form.password.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        {{ form.confirm_password.label(class="form-label") }}
+        {{ form.confirm_password(class="form-input", placeholder="Confirm your password") }}
+        {% if form.confirm_password.errors %}
+          {% for error in form.confirm_password.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      {{ form.submit(class="btn btn-primary form-submit") }}
+    </form>
+    <p style="text-align: center; margin-top: 20px; color: var(--steam-text-muted);">
+      Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+    </p>
+  </div>
 {% endblock %}

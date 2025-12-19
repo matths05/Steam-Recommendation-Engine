@@ -2,18 +2,31 @@
 {% block title %}Genre: {{ tag }}{% endblock %}
 
 {% block content %}
-  <h1>Genre/Tag: {{ tag }}</h1>
+  <div class="card">
+    <h1>Genre/Tag: <span style="color: var(--steam-blue);">{{ tag }}</span></h1>
+  </div>
 
   {% if games and games|length > 0 %}
-    <ul>
+    <div class="game-grid">
       {% for g in games %}
-        <li>
-          <a href="{{ url_for('explore.game_detail', appid=g.appid) }}">{{ g.name }}</a>
-          (rating: {{ g.global_rating }})
-        </li>
+        <div class="game-card">
+          <div class="game-image">
+            <span>🎮</span>
+          </div>
+          <div class="game-info">
+            <div class="game-title">
+              <a href="{{ url_for('explore.game_detail', appid=g.appid) }}">{{ g.name }}</a>
+            </div>
+            {% if g.global_rating > 0 %}
+              <div class="game-meta">Rating: {{ g.global_rating }}</div>
+            {% endif %}
+          </div>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
   {% else %}
-    <p>No games found for this tag yet. (Your database may not have enriched many games.)</p>
+    <div class="card">
+      <p class="text-muted">No games found for this tag yet. (Your database may not have enriched many games.)</p>
+    </div>
   {% endif %}
 {% endblock %}

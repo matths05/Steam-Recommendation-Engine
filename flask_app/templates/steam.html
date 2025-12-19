@@ -1,32 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Steam{% endblock %}
+{% block title %}Steam Settings{% endblock %}
 {% block content %}
-  <h1>Steam Settings</h1>
+  <div class="card">
+    <h1>Steam Settings</h1>
+    <p class="text-muted">Connect your Steam account to sync your game library and get personalized recommendations.</p>
+  </div>
 
-  <h2>1) Save your Steam ID</h2>
-  <form method="POST">
-    {{ steam_form.hidden_tag() }}
-    <p>{{ steam_form.steam_id.label }}<br>{{ steam_form.steam_id(size=80) }}</p>
-    <p>{{ steam_form.submit() }}</p>
-  </form>
+  <div class="card">
+    <h2>1) Save your Steam ID</h2>
+    <p class="text-muted" style="margin-bottom: 20px;">Enter your Steam ID, Steam profile URL, or Steam username.</p>
+    <form method="POST" style="max-width: 600px;">
+      {{ steam_form.hidden_tag() }}
+      <div class="form-group">
+        {{ steam_form.steam_id.label(class="form-label") }}
+        {{ steam_form.steam_id(class="form-input", placeholder="Steam ID, profile URL, or username") }}
+        {% if steam_form.steam_id.errors %}
+          {% for error in steam_form.steam_id.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      {{ steam_form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
 
-  <h2>2) Sync your library</h2>
-  <form method="POST">
-    {{ sync_form.hidden_tag() }}
-    <p>{{ sync_form.submit() }}</p>
-  </form>
+  <div class="card">
+    <h2>2) Sync your library</h2>
+    <p class="text-muted" style="margin-bottom: 20px;">Fetch your game library and playtime data from Steam.</p>
+    <form method="POST">
+      {{ sync_form.hidden_tag() }}
+      {{ sync_form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
 
-  <p><strong>Owned games stored:</strong> {{ owned_count }}</p>
+  <div class="card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+      <div>
+        <div style="color: var(--steam-text-muted); font-size: 14px;">Owned Games</div>
+        <div style="color: var(--steam-blue); font-size: 24px; font-weight: 600;">{{ owned_count }}</div>
+      </div>
+      <div>
+        <div style="color: var(--steam-text-muted); font-size: 14px;">Last Sync</div>
+        <div style="color: var(--steam-text-light); font-size: 16px;">{{ last_sync or "Never" }}</div>
+      </div>
+    </div>
+  </div>
+
   {% if top_games and top_games|length > 0 %}
-    <h2>Top Played Games</h2>
-    <ol>
+    <div class="card">
+      <h2>Top Played Games</h2>
+      <ul class="recommendation-list" style="margin-top: 15px;">
         {% for g in top_games %}
-        <li>
-            {{ g.name or ("AppID " ~ g.appid) }} —
-            {{ (g.playtime_forever or 0) // 60 }} hours
-        </li>
+          <li class="recommendation-item">
+            <div class="recommendation-content">
+              <div class="recommendation-title">{{ g.name or ("AppID " ~ g.appid) }}</div>
+              <div class="recommendation-meta">
+                <span class="recommendation-score">{{ (g.playtime_forever or 0) // 60 }} hours</span>
+              </div>
+            </div>
+          </li>
         {% endfor %}
-    </ol>
-{% endif %}
-  <p><strong>Last sync:</strong> {{ last_sync }}</p>
+      </ul>
+    </div>
+  {% endif %}
 {% endblock %}
