@@ -2,6 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange
 
+class EmptyForm(FlaskForm):
+    pass
 
 TAG_CHOICES = [
     ("Action", "Action"),
@@ -49,6 +51,6 @@ class SyncSteamForm(FlaskForm):
     submit = SubmitField("Sync Steam Library")
 
 class ManualRateForm(FlaskForm):
-    appid = StringField("Game AppID", validators=[DataRequired(), Length(min=1, max=12)])
+    appid = StringField("Game AppID or Steam Store URL", validators=[DataRequired(), Length(min=1, max=200)])
     rating = IntegerField("Rating (1-10)", validators=[DataRequired(), NumberRange(min=1, max=10)])
     submit = SubmitField("Save Rating")

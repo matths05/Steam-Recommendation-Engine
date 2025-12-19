@@ -1,6 +1,7 @@
+import re
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
-from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm, ManualRateForm
+from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm, ManualRateForm, EmptyForm
 from datetime import datetime
 from .steam_api import get_owned_games, resolve_to_steamid64
 from .models import Rating, Game
@@ -11,6 +12,27 @@ from .recommender import build_tag_vocab, user_to_vector
 
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
+
+def extract_appid(appid_input: str):
+    """
+    Accepts:
+      - '620'
+      - Steam store URLs like https://store.steampowered.com/app/620/Portal_2/
+    Returns:
+      int appid or None
+    """
+    appid_input = appid_input.strip()
+
+    # Case 1: pure number
+    if appid_input.isdigit():
+        return int(appid_input)
+
+    # Case 2: Steam store URL
+    match = re.search(r"/app/(\d+)", appid_input)
+    if match:
+        return int(match.group(1))
+
+    return None
 
 @profile.route("/preferences", methods=["GET", "POST"])
 @login_required
@@ -166,11 +188,25 @@ def rate_game():
     form = ManualRateForm()
 
     if form.validate_on_submit():
-        try:
-            appid_int = int(form.appid.data.strip())
-        except ValueError:
+        appid_int = extract_appid(form.appid.data)
+        if not appid_int:
             return redirect(url_for("profile.rate_game"))
 
+        game = Game.objects(appid=appid_int).first()
+        if not game:
+            details = fetch_app_details(appid_int)
+            if not details:
+                # invalid appid (or store API says success=false)
+                return redirect(url_for("profile.rate_game"))
+
+            Game(
+                appid=details["appid"],
+                name=details["name"],
+                tags=details.get("tags", []),
+                global_rating=0.0
+            ).save()
+
+        # Save rating (works whether user owns it or not)
         Rating.objects(user_id=current_user.id, appid=appid_int).modify(
             upsert=True,
             set__rating=form.rating.data,
@@ -188,4 +224,12 @@ def rate_game():
     games = {g.appid: g.name for g in Game.objects(appid__in=ids).only("appid", "name")}
     ratings_view = [{"appid": r.appid, "name": games.get(r.appid), "rating": r.rating} for r in my_ratings]
 
-    return render_template("rate.html", form=form, ratings=ratings_view)
+    return render_template("rate.html", form=form, ratings=ratings_view, delete_form=EmptyForm())
+
+@profile.route("/rate/delete/<int:appid>", methods=["POST"])
+@login_required
+def delete_rating(appid):
+    Rating.objects(user_id=current_user.id, appid=appid).delete()
+    train_model()
+    return redirect(url_for("profile.rate_game"))
+

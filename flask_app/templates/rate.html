@@ -9,7 +9,7 @@
       
       <div class="form-group">
         {{ form.appid.label(class="form-label") }}
-        {{ form.appid(class="form-input", placeholder="Enter Steam AppID") }}
+        {{ form.appid(class="form-input", placeholder="Enter Steam AppID or Store URL") }}
         {% if form.appid.errors %}
           {% for error in form.appid.errors %}
             <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
@@ -36,14 +36,24 @@
     {% if ratings and ratings|length > 0 %}
       <ul class="recommendation-list" style="margin-top: 15px;">
         {% for r in ratings %}
-          <li class="recommendation-item">
-            <div class="recommendation-content">
-              <div class="recommendation-title">{{ r.name or ("AppID " ~ r.appid) }}</div>
-              <div class="recommendation-meta">
-                <span class="recommendation-score">Rating: {{ r.rating }}/10</span>
-              </div>
-            </div>
-          </li>
+            <li class="recommendation-item">
+                <div class="recommendation-content">
+                <div class="recommendation-title">{{ r.name or ("AppID " ~ r.appid) }}</div>
+
+                <div class="recommendation-meta" style="display:flex; align-items:center; gap:12px;">
+                    <span class="recommendation-score">Rating: {{ r.rating }}/10</span>
+
+                    <form method="POST"
+                        action="{{ url_for('profile.delete_rating', appid=r.appid) }}"
+                        style="margin:0;">
+                    {{ delete_form.hidden_tag() }}
+                    <button type="submit" class="btn btn-secondary" style="padding:6px 10px; font-size:12px;">
+                        Remove
+                    </button>
+                    </form>
+                </div>
+                </div>
+            </li>
         {% endfor %}
       </ul>
     {% else %}
