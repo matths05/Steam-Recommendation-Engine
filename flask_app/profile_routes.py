@@ -152,7 +152,7 @@ def steam_settings():
         current_user.last_sync = datetime.utcnow()
 
         # Enrich Games collection for owned appids (cap to avoid hammering API)
-        owned_appids = [g["appid"] for g in current_user.owned_games[:1000]]  # start with 50
+        owned_appids = [g["appid"] for g in current_user.owned_games[:200]]  # start with 50
         existing = set(Game.objects(appid__in=owned_appids).scalar("appid"))
 
         for appid in owned_appids:
