@@ -240,7 +240,7 @@ def knn_page():
         neighbor_ids.append(uid)
         neighbors_info.append({"user_id": uid, "distance": float(dist), "similarity": round(1 - float(dist), 3)})
 
-    neighbors = list(User.objects(id__in=neighbor_ids).only("email", "owned_games", "pinned_games"))
+    neighbors = list(User.objects(id__in=neighbor_ids).only("steam_id", "owned_games", "pinned_games"))
     by_id = {str(u.id): u for u in neighbors}
 
     # Preload ratings for neighbors to avoid querying inside loops
@@ -305,7 +305,7 @@ def knn_page():
     # Add neighbor emails
     for info in neighbors_info:
         u = by_id.get(info["user_id"])
-        info["email"] = u.email if u else "(unknown)"
+        info["steam_id"] = u.steam_id if (u and u.steam_id) else None
 
     return render_template(
         "knn.html",
