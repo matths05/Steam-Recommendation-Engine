@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Friend Compare{% endblock %}
+
+{% block content %}
+  <h1>Friend Compare</h1>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <p>
+      {{ form.friend_steam_id.label }}<br>
+      {{ form.friend_steam_id(size=40) }}
+    </p>
+    <p>{{ form.submit() }}</p>
+  </form>
+
+  {% if current_user.friend_steam_id %}
+    <p>Saved friend Steam ID: <strong>{{ current_user.friend_steam_id }}</strong></p>
+  {% endif %}
+{% endblock %}

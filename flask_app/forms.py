@@ -32,3 +32,11 @@ class LoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Log in")
+
+class FriendCompareForm(FlaskForm):
+    friend_steam_id = StringField(
+        "Friend Steam ID",
+        validators=[DataRequired(), Length(min=3, max=32)]
+    )
+    submit = SubmitField("Save Friend ID")
+

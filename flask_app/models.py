@@ -8,6 +8,8 @@ class User(db.Document, UserMixin):
     favorite_tags = db.ListField(db.StringField(), default=list)
     hated_tags = db.ListField(db.StringField(), default=list)
 
+    friend_steam_id = db.StringField()
+
     # This tells MongoEngine which collection name to use (optional but nice)
     meta = {"collection": "users"}
 

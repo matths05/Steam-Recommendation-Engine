@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
+from .forms import PreferencesForm, FriendCompareForm
 
-from .forms import PreferencesForm
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -22,3 +22,19 @@ def preferences():
         return redirect(url_for("profile.preferences"))
 
     return render_template("preferences.html", form=form)
+
+@profile.route("/friend-compare", methods=["GET", "POST"])
+@login_required
+def friend_compare():
+    form = FriendCompareForm()
+
+    # Pre-fill with saved value on GET
+    if not form.is_submitted():
+        form.friend_steam_id.data = current_user.friend_steam_id or ""
+
+    if form.validate_on_submit():
+        current_user.friend_steam_id = form.friend_steam_id.data.strip()
+        current_user.save()
+        return redirect(url_for("profile.friend_compare"))
+
+    return render_template("friend_compare.html", form=form)
