@@ -6,6 +6,8 @@ from .steam_api import get_owned_games, resolve_to_steamid64
 from .models import Rating, Game
 from .steam_store_api import fetch_app_details
 from bson import ObjectId
+from .train import train_model
+
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -23,6 +25,7 @@ def preferences():
         current_user.favorite_tags = form.favorite_tags.data
         current_user.hated_tags = form.hated_tags.data
         current_user.save()
+        train_model()
         return redirect(url_for("profile.preferences"))
 
     return render_template("preferences.html", form=form)
@@ -92,6 +95,7 @@ def steam_settings():
                     Game(appid=details["appid"], name=details["name"], tags=details["tags"], global_rating=0.0).save()
 
         current_user.save()
+        train_model()
 
         return redirect(url_for("profile.steam_settings"))
 
@@ -127,6 +131,8 @@ def rate_game():
             set__rating=form.rating.data,
             new=True
         )
+
+        train_model()
 
         return redirect(url_for("profile.rate_game"))
 
