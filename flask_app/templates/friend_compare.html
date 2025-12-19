@@ -12,7 +12,7 @@
       {{ form.hidden_tag() }}
       <div class="form-group">
         {{ form.friend_steam.label(class="form-label") }}
-        {{ form.friend_steam(class="form-input", placeholder="Friend's Steam ID, profile URL, or username") }}
+        {{ form.friend_steam(class="form-input", placeholder="Friend's Steam ID, profile URL, or vanity") }}
         {% if form.friend_steam.errors %}
           {% for error in form.friend_steam.errors %}
             <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>

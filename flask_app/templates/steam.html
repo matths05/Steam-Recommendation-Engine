@@ -8,12 +8,12 @@
 
   <div class="card">
     <h2>1) Save your Steam ID</h2>
-    <p class="text-muted" style="margin-bottom: 20px;">Enter your Steam ID, Steam profile URL, or Steam username.</p>
+    <p class="text-muted" style="margin-bottom: 20px;">Enter your Steam ID, Steam profile URL, or Steam vanity.</p>
     <form method="POST" style="max-width: 600px;">
       {{ steam_form.hidden_tag() }}
       <div class="form-group">
         {{ steam_form.steam_id.label(class="form-label") }}
-        {{ steam_form.steam_id(class="form-input", placeholder="Steam ID, profile URL, or username") }}
+        {{ steam_form.steam_id(class="form-input", placeholder="Steam ID, profile URL, or vanity") }}
         {% if steam_form.steam_id.errors %}
           {% for error in steam_form.steam_id.errors %}
             <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
