@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
-from .models import Game, User
+from .models import Game, User, Rating
 from flask_wtf import FlaskForm
 from sklearn.neighbors import NearestNeighbors
 from .recommender import build_tag_vocab, build_training_data, user_to_vector
@@ -243,6 +243,13 @@ def knn_page():
     neighbors = list(User.objects(id__in=neighbor_ids).only("email", "owned_games", "pinned_games"))
     by_id = {str(u.id): u for u in neighbors}
 
+    # Preload ratings for neighbors to avoid querying inside loops
+    neighbor_obj_ids = [u.id for u in neighbors]
+    ratings_lookup = {}  # (user_id_str, appid) -> rating_int
+
+    for r in Rating.objects(user_id__in=neighbor_obj_ids).only("user_id", "appid", "rating"):
+        ratings_lookup[(str(r.user_id), r.appid)] = r.rating
+
     # Recommend from neighbors' owned libraries (not just pins)
     my_owned_ids = {g.get("appid") for g in (current_user.owned_games or []) if g.get("appid") is not None}
     my_pins = set(current_user.pinned_games or [])
@@ -266,6 +273,13 @@ def knn_page():
 
             # Score contribution: similarity-weighted hours (cap hours so one game doesn't dominate)
             contrib = sim * min(hours, 100)
+
+            # If neighbor rated this game, adjust contribution
+            rating = ratings_lookup.get((str(u.id), appid))
+            if rating is not None:
+                # map rating 1..10 -> multiplier 0.6..1.4 (gentle, safe)
+                rating_factor = 0.6 + (rating / 12.5)  # 1->0.68, 10->1.4
+                contrib *= rating_factor
 
             scores[appid] = scores.get(appid, 0.0) + contrib
 
