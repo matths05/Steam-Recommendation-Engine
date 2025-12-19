@@ -1,8 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from typing import List, Tuple
-
-from .models import Game, User
+from .models import Game, User, Rating
 
 
 def build_tag_vocab() -> List[str]:
@@ -42,16 +41,35 @@ def user_to_vector(user: User, vocab: List[str]) -> List[float]:
     # optional: use owned playtime to strengthen signals (only works where appid exists in Games collection)
     owned = user.owned_games or []
     owned_by_appid = {g.get("appid"): g for g in owned if g.get("appid") is not None}
+    owned_appids = list(owned_by_appid.keys())
 
-    if owned_by_appid:
-        games = Game.objects(appid__in=list(owned_by_appid.keys())).only("appid", "tags")
+    # Pull manual ratings for this user (appid -> rating 1..10)
+    ratings = {
+        r.appid: r.rating
+        for r in Rating.objects(user_id=user.id, appid__in=owned_appids).only("appid", "rating")
+    }
+
+    if owned_appids:
+        games = Game.objects(appid__in=owned_appids).only("appid", "tags")
         for game in games:
-            minutes = owned_by_appid.get(game.appid, {}).get("playtime_forever", 0) or 0
-            hours = minutes / 60.0
-            # Small weight so hours don't dominate everything
-            for t in (game.tags or []):
-                if t in idx:
-                    v[idx[t]] += 0.1 * hours
+            tags = game.tags or []
+
+            if game.appid in ratings:
+                # Rating overrides hours:
+                # Convert rating 1..10 into a centered weight (-1.0 .. +1.0)
+                # 1 -> -1.0, 5/6 -> around 0, 10 -> +1.0
+                w = (ratings[game.appid] - 5.5) / 4.5
+                # Make ratings a strong signal
+                for t in tags:
+                    if t in idx:
+                        v[idx[t]] += 3.0 * w
+            else:
+                # Otherwise use hours as a weak signal
+                minutes = owned_by_appid.get(game.appid, {}).get("playtime_forever", 0) or 0
+                hours = minutes / 60.0
+                for t in tags:
+                    if t in idx:
+                        v[idx[t]] += 0.1 * hours
 
     return v
 
