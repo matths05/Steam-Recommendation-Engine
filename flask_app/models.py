@@ -5,6 +5,9 @@ class User(db.Document, UserMixin):
     email = db.StringField(required=True, unique=True)
     password_hash = db.StringField(required=True)
 
+    favorite_tags = db.ListField(db.StringField(), default=list)
+    hated_tags = db.ListField(db.StringField(), default=list)
+
     # This tells MongoEngine which collection name to use (optional but nice)
     meta = {"collection": "users"}
 

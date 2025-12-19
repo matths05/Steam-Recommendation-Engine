@@ -40,5 +40,7 @@ def create_app():
     from .auth_routes import auth
     app.register_blueprint(auth)
 
+    from .profile_routes import profile
+    app.register_blueprint(profile)
 
     return app

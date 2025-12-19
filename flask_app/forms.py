@@ -1,6 +1,23 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, EqualTo
+from wtforms import StringField, PasswordField, SubmitField, SelectMultipleField
+from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional
+
+
+TAG_CHOICES = [
+    ("Action", "Action"),
+    ("Adventure", "Adventure"),
+    ("RPG", "RPG"),
+    ("Strategy", "Strategy"),
+    ("Simulation", "Simulation"),
+    ("Puzzle", "Puzzle"),
+    ("Horror", "Horror"),
+    ("Sports", "Sports"),
+]
+
+class PreferencesForm(FlaskForm):
+    favorite_tags = SelectMultipleField("Favorite Tags", choices=TAG_CHOICES, validators=[Optional()])
+    hated_tags = SelectMultipleField("Hated Tags", choices=TAG_CHOICES, validators=[Optional()])
+    submit = SubmitField("Save Preferences")
 
 class RegisterForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
