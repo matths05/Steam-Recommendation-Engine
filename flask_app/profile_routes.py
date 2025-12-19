@@ -192,6 +192,9 @@ def rate_game():
         if not appid_int:
             return redirect(url_for("profile.rate_game"))
 
+        if appid_int <= 0 or appid_int > 2_147_483_647:
+            return redirect(url_for("profile.rate_game"))
+
         game = Game.objects(appid=appid_int).first()
         if not game:
             details = fetch_app_details(appid_int)
