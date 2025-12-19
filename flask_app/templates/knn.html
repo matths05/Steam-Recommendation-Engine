@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block title %}KNN Recommendations{% endblock %}
+{% block title %}People Like You{% endblock %}
 
 {% block content %}
-  <h1>KNN Recommendations</h1>
+<h1>People Like You</h1>
+<p>Recommended based on users with similar taste (KNN + cosine similarity).</p>
 
   {% if error %}
     <p>{{ error }}</p>
