@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
 from . import db
+from flask_login import login_required, current_user
 
 main = Blueprint("main", __name__)
 
@@ -13,3 +14,8 @@ def db_test():
     database.test_collection.insert_one({"message": "hello from atlas"})
     doc = database.test_collection.find_one(sort=[("_id", -1)])
     return doc["message"]
+
+@main.route("/dashboard")
+@login_required
+def dashboard():
+    return f"Dashboard ✅ Logged in as: {current_user.email}"
