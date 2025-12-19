@@ -7,6 +7,7 @@ from .models import Rating, Game
 from .steam_store_api import fetch_app_details
 from bson import ObjectId
 from .train import train_model
+from .recommender import build_tag_vocab, user_to_vector
 
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
@@ -33,18 +34,62 @@ def preferences():
 @profile.route("/friend-compare", methods=["GET", "POST"])
 @login_required
 def friend_compare():
-    form = FriendCompareForm()
+    form = FriendCompareForm(prefix="friend")
 
-    # Pre-fill with saved value on GET
-    if not form.is_submitted():
-        form.friend_steam_id.data = current_user.friend_steam_id or ""
+    result = None
 
-    if form.validate_on_submit():
-        current_user.friend_steam_id = form.friend_steam_id.data.strip()
-        current_user.save()
-        return redirect(url_for("profile.friend_compare"))
+    if form.validate_on_submit() and form.submit.data:
+        friend_input = form.friend_steam.data.strip()
 
-    return render_template("friend_compare.html", form=form)
+        try:
+            friend_steamid64 = resolve_to_steamid64(friend_input)
+            friend_games = get_owned_games(friend_steamid64)  # returns list of dicts with appid, playtime_forever, maybe name
+        except Exception:
+            return redirect(url_for("profile.friend_compare"))
+
+        # Compute overlap (based on appids)
+        my_owned = {g.get("appid") for g in (current_user.owned_games or []) if g.get("appid") is not None}
+        friend_owned = {g.get("appid") for g in friend_games if g.get("appid") is not None}
+
+        overlap = 0.0
+        if my_owned or friend_owned:
+            overlap = (len(my_owned & friend_owned) / len(my_owned | friend_owned)) * 100
+
+        # Compute cosine similarity using vectors
+        vocab = build_tag_vocab()
+        me_vec = user_to_vector(current_user, vocab)
+
+        # Build a "fake user-like object" for friend vector using their owned games only
+        class FriendObj:
+            id = None
+            favorite_tags = []
+            hated_tags = []
+            owned_games = [{"appid": g.get("appid"), "playtime_forever": g.get("playtime_forever", 0)} for g in friend_games]
+
+        friend_vec = user_to_vector(FriendObj(), vocab)
+
+        # cosine similarity (manual, no sklearn needed here)
+        def cos_sim(a, b):
+            import math
+            dot = sum(x*y for x, y in zip(a, b))
+            na = math.sqrt(sum(x*x for x in a))
+            nb = math.sqrt(sum(x*x for x in b))
+            if na == 0 or nb == 0:
+                return 0.0
+            return dot / (na * nb)
+
+        similarity = cos_sim(me_vec, friend_vec)
+
+        result = {
+            "friend_steamid64": friend_steamid64,
+            "overlap_percent": round(overlap, 2),
+            "similarity": round(similarity, 3),
+            "my_count": len(my_owned),
+            "friend_count": len(friend_owned),
+            "shared_count": len(my_owned & friend_owned),
+        }
+
+    return render_template("friend_compare.html", form=form, result=result)
 
 @profile.route("/steam", methods=["GET", "POST"])
 @login_required

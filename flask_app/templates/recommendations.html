@@ -10,7 +10,11 @@
     {% for r in recs %}
       <li>
         <strong><a href="{{ url_for('explore.game_detail', appid=r.appid) }}">{{ r.name }}</a></strong>
-        (score: {{ r.score }}, rating: {{ r.global_rating }})
+        (score: {{ r.score }}
+        {% if r.global_rating > 0 %}
+        , rating: {{ r.global_rating }}
+        {% endif %}
+        )
         <br>
         Tags: {{ r.tags|join(", ") if r.tags else "None" }}
         <br>

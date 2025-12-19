@@ -6,14 +6,19 @@
 
   <form method="POST">
     {{ form.hidden_tag() }}
-    <p>
-      {{ form.friend_steam_id.label }}<br>
-      {{ form.friend_steam_id(size=40) }}
-    </p>
+    <p>{{ form.friend_steam.label }}<br>{{ form.friend_steam(size=60) }}</p>
     <p>{{ form.submit() }}</p>
   </form>
 
-  {% if current_user.friend_steam_id %}
-    <p>Saved friend Steam ID: <strong>{{ current_user.friend_steam_id }}</strong></p>
+  {% if result %}
+    <h2>Results</h2>
+    <ul>
+      <li><strong>Friend SteamID64:</strong> {{ result.friend_steamid64 }}</li>
+      <li><strong>Library overlap:</strong> {{ result.overlap_percent }}%</li>
+      <li><strong>Taste similarity (cosine):</strong> {{ result.similarity }}</li>
+      <li><strong>Your games:</strong> {{ result.my_count }}</li>
+      <li><strong>Friend games:</strong> {{ result.friend_count }}</li>
+      <li><strong>Shared games:</strong> {{ result.shared_count }}</li>
+    </ul>
   {% endif %}
 {% endblock %}
