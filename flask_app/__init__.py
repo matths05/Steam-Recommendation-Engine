@@ -43,4 +43,8 @@ def create_app():
     from .profile_routes import profile
     app.register_blueprint(profile)
 
+    from .engine_routes import engine
+    app.register_blueprint(engine)
+
+
     return app
