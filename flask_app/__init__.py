@@ -1,8 +1,17 @@
 import os
 from flask import Flask
 from flask_mongoengine import MongoEngine
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+
 
 db = MongoEngine()
+
+login_manager = LoginManager()
+login_manager.login_view = "auth.login"
+
+csrf = CSRFProtect()
+
 
 def create_app():
     app = Flask(__name__)
@@ -15,8 +24,21 @@ def create_app():
     app.config["MONGODB_SETTINGS"] = {"host": mongo_uri}
 
     db.init_app(app)
+    login_manager.init_app(app)
+    csrf.init_app(app)
+
+    from .models import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.objects(id=user_id).first()
+
 
     from .routes import main
     app.register_blueprint(main)
+
+    from .auth_routes import auth
+    app.register_blueprint(auth)
+
 
     return app
