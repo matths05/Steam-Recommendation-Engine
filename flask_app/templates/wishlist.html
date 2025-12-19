@@ -2,24 +2,45 @@
 {% block title %}Wishlist{% endblock %}
 
 {% block content %}
-  <h1>Your Wishlist</h1>
-
-  <p><a href="{{ url_for('engine.recommendations_page') }}">Back to Recommendations</a></p>
+  <div class="card">
+    <div class="card-header">
+      <h1 style="margin: 0;">Your Wishlist</h1>
+      <a href="{{ url_for('engine.recommendations_page') }}" class="btn btn-secondary">Back to Recommendations</a>
+    </div>
+  </div>
 
   {% if games and games|length > 0 %}
-    <ol>
+    <div class="game-grid">
       {% for g in games %}
-        <li>
-          <strong>{{ g.name }}</strong> (rating: {{ g.global_rating }})<br>
-          Tags: {{ g.tags|join(", ") if g.tags else "None" }}
-          <form method="POST" action="{{ url_for('engine.unpin', appid=g.appid) }}" style="display:inline;">
-            {{ form.hidden_tag() }}
-            <button type="submit">Unpin</button>
-          </form>
-        </li>
+        <div class="game-card">
+          <div class="game-image">
+            <span>🎮</span>
+          </div>
+          <div class="game-info">
+            <div class="game-title">
+              <a href="{{ url_for('explore.game_detail', appid=g.appid) }}">{{ g.name }}</a>
+            </div>
+            {% if g.global_rating > 0 %}
+              <div class="game-meta">Rating: {{ g.global_rating }}</div>
+            {% endif %}
+            {% if g.tags %}
+              <div class="game-tags">
+                {% for tag in g.tags[:3] %}
+                  <a href="{{ url_for('explore.genre_page', tag=tag) }}" class="tag">{{ tag }}</a>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <form method="POST" action="{{ url_for('engine.unpin', appid=g.appid) }}" style="margin-top: 10px;">
+              {{ form.hidden_tag() }}
+              <button type="submit" class="btn btn-secondary btn-small" style="width: 100%;">Remove</button>
+            </form>
+          </div>
+        </div>
       {% endfor %}
-    </ol>
+    </div>
   {% else %}
-    <p>No pinned games yet.</p>
+    <div class="card">
+      <p class="text-muted">No pinned games yet. Pin games from recommendations to add them to your wishlist.</p>
+    </div>
   {% endif %}
 {% endblock %}

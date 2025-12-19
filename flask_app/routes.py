@@ -18,4 +18,4 @@ def db_test():
 @main.route("/dashboard")
 @login_required
 def dashboard():
-    return f"Dashboard ✅ Logged in as: {current_user.email}"
+    return render_template("dashboard.html")

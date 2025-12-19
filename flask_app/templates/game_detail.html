@@ -2,21 +2,37 @@
 {% block title %}{{ game.name }}{% endblock %}
 
 {% block content %}
-  <h1>{{ game.name }}</h1>
-
-  <p><strong>AppID:</strong> {{ game.appid }}</p>
-
-  <p><strong>Tags:</strong>
-    {% if game.tags and game.tags|length > 0 %}
-      {% for t in game.tags %}
-        <a href="{{ url_for('explore.genre_page', tag=t) }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
-      {% endfor %}
-    {% else %}
-      None
-    {% endif %}
-  </p>
-
-  <p><strong>Global rating:</strong> {{ game.global_rating }}</p>
-
-  <p><a href="{{ url_for('engine.wishlist') }}">Back to Wishlist</a></p>
+  <div class="card">
+    <h1>{{ game.name }}</h1>
+    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-top: 20px;">
+      <div class="game-image" style="height: 250px; border-radius: 4px;">
+        <span style="font-size: 48px;">🎮</span>
+      </div>
+      <div>
+        <div style="margin-bottom: 15px;">
+          <strong style="color: var(--steam-text-muted);">AppID:</strong>
+          <span style="margin-left: 10px;">{{ game.appid }}</span>
+        </div>
+        {% if game.global_rating > 0 %}
+          <div style="margin-bottom: 15px;">
+            <strong style="color: var(--steam-text-muted);">Rating:</strong>
+            <span style="margin-left: 10px; color: var(--steam-blue); font-size: 18px; font-weight: 600;">{{ game.global_rating }}</span>
+          </div>
+        {% endif %}
+        {% if game.tags and game.tags|length > 0 %}
+          <div style="margin-bottom: 15px;">
+            <strong style="color: var(--steam-text-muted); display: block; margin-bottom: 8px;">Tags:</strong>
+            <div class="game-tags">
+              {% for t in game.tags %}
+                <a href="{{ url_for('explore.genre_page', tag=t) }}" class="tag">{{ t }}</a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+        <div style="margin-top: 20px;">
+          <a href="{{ url_for('engine.wishlist') }}" class="btn btn-secondary">Back to Wishlist</a>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

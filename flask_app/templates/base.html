@@ -1,33 +1,53 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>{% block title %}Game Recommender{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Steam Recommendation Engine{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/steam.css') }}" />
   </head>
   <body>
-    <nav>
-      <a href="{{ url_for('main.home') }}">Home</a> |
-
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a> |
-        <a href="{{ url_for('profile.preferences') }}">Preferences</a> |
-        <a href="{{ url_for('profile.friend_compare') }}">Friend Compare</a> |
-        <a href="{{ url_for('profile.steam_settings') }}">Steam</a> |
-        <a href="{{ url_for('engine.recommendations_page') }}">Tag-Based</a> |
-        <a href="{{ url_for('engine.knn_page') }}">People Like You</a> |
-        <a href="{{ url_for('profile.rate_game') }}">Rate Game</a> |
-        <a href="{{ url_for('engine.wishlist') }}">Wishlist</a> |
-        <span>{{ current_user.email }}</span> |
-        <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit">Logout</button>
-        </form>
-      {% else %}
-        <a href="{{ url_for('auth.register') }}">Register</a> |
-        <a href="{{ url_for('auth.login') }}">Login</a>
-      {% endif %}
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="{{ url_for('main.home') }}" class="nav-logo">
+          🎮 Steam Recommendations
+        </a>
+        <div class="nav-links">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('engine.recommendations_page') }}" class="nav-link">Tag-Based</a>
+            <a href="{{ url_for('engine.knn_page') }}" class="nav-link">People Like You</a>
+            <a href="{{ url_for('engine.wishlist') }}" class="nav-link">Wishlist</a>
+            <a href="{{ url_for('profile.preferences') }}" class="nav-link">Preferences</a>
+            <a href="{{ url_for('profile.steam_settings') }}" class="nav-link">Steam</a>
+            <a href="{{ url_for('profile.rate_game') }}" class="nav-link">Rate Game</a>
+            <div class="nav-user">
+              <span class="user-email">{{ current_user.email }}</span>
+              <form action="{{ url_for('auth.logout') }}" method="POST" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+              </form>
+            </div>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-small">Sign Up</a>
+          {% endif %}
+        </div>
+      </div>
     </nav>
-    <hr />
-    {% block content %}{% endblock %}
+
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
   </body>
 </html>

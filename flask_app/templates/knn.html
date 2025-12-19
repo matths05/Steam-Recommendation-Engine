@@ -2,40 +2,67 @@
 {% block title %}People Like You{% endblock %}
 
 {% block content %}
-<h1>People Like You</h1>
-<p>Recommended based on users with similar taste (KNN + cosine similarity).</p>
+  <div class="card">
+    <h1>People Like You</h1>
+    <p class="text-muted">Recommended based on users with similar taste (KNN + cosine similarity).</p>
+  </div>
 
   {% if error %}
-    <p>{{ error }}</p>
+    <div class="card">
+      <div class="alert alert-error">{{ error }}</div>
+    </div>
   {% else %}
-    <h2>Nearest Neighbors</h2>
-    <ul>
-      {% for n in neighbors %}
-        <li>{{ n.email }} — similarity: {{ n.similarity }}</li>
-      {% endfor %}
-    </ul>
-
-    <h2>Recommended from Neighbors</h2>
-    {% if recs and recs|length > 0 %}
-      <ol>
-        {% for r in recs %}
-          <li>
-            <strong>{{ r.name }}</strong> (score: {{ r.score }})<br>
-            Tags: {{ r.tags|join(", ") if r.tags else "None" }}
-
-            {% if r.appid in pinned %}
-              <em> Pinned</em>
-            {% else %}
-              <form method="POST" action="{{ url_for('engine.pin', appid=r.appid) }}" style="display:inline;">
-                {{ form.hidden_tag() }}
-                <button type="submit">Pin</button>
-              </form>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ol>
-    {% else %}
-      <p>No neighbor-based recommendations yet. Try pinning games on another account.</p>
+    {% if neighbors and neighbors|length > 0 %}
+      <div class="card">
+        <h2>Nearest Neighbors</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+          {% for n in neighbors %}
+            <div style="background: var(--steam-darker); padding: 12px; border-radius: 4px; border: 1px solid var(--steam-border);">
+              <div style="color: var(--steam-text-light); font-weight: 500;">{{ n.email }}</div>
+              <div style="color: var(--steam-blue); font-size: 12px; margin-top: 4px;">Similarity: {{ "%.3f"|format(n.similarity) }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     {% endif %}
+
+    <div class="card">
+      <h2>Recommended from Neighbors</h2>
+      {% if recs and recs|length > 0 %}
+        <ul class="recommendation-list" style="margin-top: 20px;">
+          {% for r in recs %}
+            <li class="recommendation-item">
+              <div class="recommendation-content">
+                <div class="recommendation-title">
+                  <a href="{{ url_for('explore.game_detail', appid=r.appid) }}">{{ r.name }}</a>
+                </div>
+                <div class="recommendation-meta">
+                  <span class="recommendation-score">Score: {{ "%.2f"|format(r.score) }}</span>
+                </div>
+                {% if r.tags %}
+                  <div class="game-tags" style="margin-top: 10px;">
+                    {% for tag in r.tags[:5] %}
+                      <a href="{{ url_for('explore.genre_page', tag=tag) }}" class="tag">{{ tag }}</a>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div style="margin-left: 20px;">
+                {% if r.appid in pinned %}
+                  <span class="text-muted" style="font-size: 12px;">✓ Pinned</span>
+                {% else %}
+                  <form method="POST" action="{{ url_for('engine.pin', appid=r.appid) }}" class="inline-form">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-primary btn-small">Pin to Wishlist</button>
+                  </form>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted" style="margin-top: 15px;">No neighbor-based recommendations yet. Try pinning games on another account.</p>
+      {% endif %}
+    </div>
   {% endif %}
 {% endblock %}

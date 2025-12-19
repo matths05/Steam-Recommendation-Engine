@@ -2,33 +2,52 @@
 {% block title %}Tag-Based Recommendations{% endblock %}
 
 {% block content %}
-  <h1>Tag-Based Recommendations</h1>
-  <p>Based on your favorite and disliked tags.</p>
+  <div class="card">
+    <div class="card-header">
+      <h1 style="margin: 0;">Tag-Based Recommendations</h1>
+      <a href="{{ url_for('engine.wishlist') }}" class="btn btn-secondary">View Wishlist</a>
+    </div>
+    <p class="text-muted">Based on your favorite and disliked tags.</p>
+  </div>
 
-  <p><a href="{{ url_for('engine.wishlist') }}">View Wishlist</a></p>
-
-  <ol>
-    {% for r in recs %}
-      <li>
-        <strong><a href="{{ url_for('explore.game_detail', appid=r.appid) }}">{{ r.name }}</a></strong>
-        (score: {{ r.score }}
-        {% if r.global_rating > 0 %}
-        , rating: {{ r.global_rating }}
-        {% endif %}
-        )
-        <br>
-        Tags: {{ r.tags|join(", ") if r.tags else "None" }}
-        <br>
-
-        {% if r.appid in pinned %}
-          <em>Pinned</em>
-        {% else %}
-          <form method="POST" action="{{ url_for('engine.pin', appid=r.appid) }}" style="display:inline;">
-            {{ form.hidden_tag() }}
-            <button type="submit">Pin</button>
-          </form>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ol>
+  {% if recs and recs|length > 0 %}
+    <ul class="recommendation-list">
+      {% for r in recs %}
+        <li class="recommendation-item">
+          <div class="recommendation-content">
+            <div class="recommendation-title">
+              <a href="{{ url_for('explore.game_detail', appid=r.appid) }}">{{ r.name }}</a>
+            </div>
+            <div class="recommendation-meta">
+              <span class="recommendation-score">Score: {{ "%.2f"|format(r.score) }}</span>
+              {% if r.global_rating > 0 %}
+                <span style="margin-left: 15px;">Rating: {{ r.global_rating }}</span>
+              {% endif %}
+            </div>
+            {% if r.tags %}
+              <div class="game-tags" style="margin-top: 10px;">
+                {% for tag in r.tags[:5] %}
+                  <a href="{{ url_for('explore.genre_page', tag=tag) }}" class="tag">{{ tag }}</a>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div style="margin-left: 20px;">
+            {% if r.appid in pinned %}
+              <span class="text-muted" style="font-size: 12px;">✓ Pinned</span>
+            {% else %}
+              <form method="POST" action="{{ url_for('engine.pin', appid=r.appid) }}" class="inline-form">
+                {{ form.hidden_tag() }}
+                <button type="submit" class="btn btn-primary btn-small">Pin to Wishlist</button>
+              </form>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="card">
+      <p class="text-muted">No recommendations available. Try setting your preferences or connecting your Steam account.</p>
+    </div>
+  {% endif %}
 {% endblock %}

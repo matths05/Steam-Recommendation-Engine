@@ -2,25 +2,52 @@
 {% block title %}Manual Rating{% endblock %}
 
 {% block content %}
-  <h1>Manual Rate a Game</h1>
+  <div class="form-container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Rate a Game</h1>
+    <form method="POST">
+      {{ form.hidden_tag() }}
+      
+      <div class="form-group">
+        {{ form.appid.label(class="form-label") }}
+        {{ form.appid(class="form-input", placeholder="Enter Steam AppID") }}
+        {% if form.appid.errors %}
+          {% for error in form.appid.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
 
-  <form method="POST">
-    {{ form.hidden_tag() }}
-    <p>{{ form.appid.label }}<br>{{ form.appid(size=20) }}</p>
-    <p>{{ form.rating.label }}<br>{{ form.rating() }}</p>
-    <p>{{ form.submit() }}</p>
-  </form>
+      <div class="form-group">
+        {{ form.rating.label(class="form-label") }}
+        {{ form.rating(class="form-input") }}
+        {% if form.rating.errors %}
+          {% for error in form.rating.errors %}
+            <div class="alert alert-error" style="margin-top: 8px; font-size: 12px;">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
 
-  <h2>Your Recent Ratings</h2>
-  {% if ratings and ratings|length > 0 %}
-    <ul>
-      {% for r in ratings %}
-        <li>
-          {{ r.name or ("AppID " ~ r.appid) }} — {{ r.rating }}/10
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No ratings yet.</p>
-  {% endif %}
+      {{ form.submit(class="btn btn-primary form-submit") }}
+    </form>
+  </div>
+
+  <div class="card" style="margin-top: 30px;">
+    <h2>Your Recent Ratings</h2>
+    {% if ratings and ratings|length > 0 %}
+      <ul class="recommendation-list" style="margin-top: 15px;">
+        {% for r in ratings %}
+          <li class="recommendation-item">
+            <div class="recommendation-content">
+              <div class="recommendation-title">{{ r.name or ("AppID " ~ r.appid) }}</div>
+              <div class="recommendation-meta">
+                <span class="recommendation-score">Rating: {{ r.rating }}/10</span>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">No ratings yet. Rate games to help improve recommendations.</p>
+    {% endif %}
+  </div>
 {% endblock %}
