@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm
 from datetime import datetime
-
+from .steam_api import get_owned_games, resolve_to_steamid64
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -56,10 +56,27 @@ def steam_settings():
         return redirect(url_for("profile.steam_settings"))
 
     if sync_form.validate_on_submit() and sync_form.submit.data:
-        # placeholder for Step 7D (real API call)
+        if not current_user.steam_id:
+            return redirect(url_for("profile.steam_settings"))
+
+        try:
+            steamid64 = resolve_to_steamid64(current_user.steam_id)
+            games = get_owned_games(steamid64)
+        except Exception:
+            # Keep it simple (no flash). Just don't sync if invalid.
+            return redirect(url_for("profile.steam_settings"))
+
+        current_user.steam_id = steamid64  # normalize stored ID to SteamID64
+        current_user.owned_games = [
+            {"appid": g.get("appid"), "playtime_forever": g.get("playtime_forever", 0)}
+            for g in games
+            if g.get("appid") is not None
+        ]
         current_user.last_sync = datetime.utcnow()
         current_user.save()
+
         return redirect(url_for("profile.steam_settings"))
+
 
     return render_template(
         "steam.html",
