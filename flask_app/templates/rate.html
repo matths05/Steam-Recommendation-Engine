@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Manual Rating{% endblock %}
+
+{% block content %}
+  <h1>Manual Rate a Game</h1>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.appid.label }}<br>{{ form.appid(size=20) }}</p>
+    <p>{{ form.rating.label }}<br>{{ form.rating() }}</p>
+    <p>{{ form.submit() }}</p>
+  </form>
+
+  <h2>Your Recent Ratings</h2>
+  {% if ratings and ratings|length > 0 %}
+    <ul>
+      {% for r in ratings %}
+        <li>
+          {{ r.name or ("AppID " ~ r.appid) }} — {{ r.rating }}/10
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No ratings yet.</p>
+  {% endif %}
+{% endblock %}

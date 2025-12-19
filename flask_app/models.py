@@ -33,3 +33,16 @@ class Game(db.Document):
 
     meta = {"collection": "games"}
 
+class Rating(db.Document):
+    user_id = db.ObjectIdField(required=True)
+    appid = db.IntField(required=True)
+    rating = db.IntField(required=True, min_value=1, max_value=10)
+
+    meta = {
+        "collection": "ratings",
+        "indexes": [
+            {"fields": ["user_id", "appid"], "unique": True}
+        ]
+    }
+
+

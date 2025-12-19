@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
-from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm
+from .forms import PreferencesForm, FriendCompareForm, SteamIdForm, SyncSteamForm, ManualRateForm
 from datetime import datetime
 from .steam_api import get_owned_games, resolve_to_steamid64
-from .models import Game
+from .models import Rating, Game
 from .steam_store_api import fetch_app_details
-
+from bson import ObjectId
 
 profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -111,3 +111,30 @@ def steam_settings():
         top_games=top_games,
     )
 
+@profile.route("/rate", methods=["GET", "POST"])
+@login_required
+def rate_game():
+    form = ManualRateForm()
+
+    if form.validate_on_submit():
+        try:
+            appid_int = int(form.appid.data.strip())
+        except ValueError:
+            return redirect(url_for("profile.rate_game"))
+
+        Rating.objects(user_id=current_user.id, appid=appid_int).modify(
+            upsert=True,
+            set__rating=form.rating.data,
+            new=True
+        )
+
+        return redirect(url_for("profile.rate_game"))
+
+    # Show user's recent ratings
+    my_ratings = list(Rating.objects(user_id=current_user.id).order_by("-id")[:10])
+    # Attach names if we have them
+    ids = [r.appid for r in my_ratings]
+    games = {g.appid: g.name for g in Game.objects(appid__in=ids).only("appid", "name")}
+    ratings_view = [{"appid": r.appid, "name": games.get(r.appid), "rating": r.rating} for r in my_ratings]
+
+    return render_template("rate.html", form=form, ratings=ratings_view)
