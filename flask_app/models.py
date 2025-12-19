@@ -17,6 +17,8 @@ class User(db.Document, UserMixin):
     # This tells MongoEngine which collection name to use (optional but nice)
     meta = {"collection": "users"}
 
+    pinned_games = db.ListField(db.IntField(), default=list)
+    
     def get_id(self):
         # Flask-Login needs a string ID
         return str(self.id)

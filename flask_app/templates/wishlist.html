@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Wishlist{% endblock %}
+
+{% block content %}
+  <h1>Your Wishlist</h1>
+
+  <p><a href="{{ url_for('engine.recommendations_page') }}">Back to Recommendations</a></p>
+
+  {% if games and games|length > 0 %}
+    <ol>
+      {% for g in games %}
+        <li>
+          <strong>{{ g.name }}</strong> (rating: {{ g.global_rating }})<br>
+          Tags: {{ g.tags|join(", ") if g.tags else "None" }}
+          <form method="POST" action="{{ url_for('engine.unpin', appid=g.appid) }}" style="display:inline;">
+            {{ form.hidden_tag() }}
+            <button type="submit">Unpin</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>No pinned games yet.</p>
+  {% endif %}
+{% endblock %}

@@ -13,6 +13,8 @@
         <a href="{{ url_for('profile.preferences') }}">Preferences</a> |
         <a href="{{ url_for('profile.friend_compare') }}">Friend Compare</a> |
         <a href="{{ url_for('profile.steam_settings') }}">Steam</a> |
+        <a href="{{ url_for('engine.recommendations_page') }}">Recommendations</a> |
+        <a href="{{ url_for('engine.wishlist') }}">Wishlist</a> |
         <span>{{ current_user.email }}</span> |
         <form action="{{ url_for('auth.logout') }}" method="POST" style="display:inline;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
