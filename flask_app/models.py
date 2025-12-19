@@ -20,3 +20,12 @@ class User(db.Document, UserMixin):
     def get_id(self):
         # Flask-Login needs a string ID
         return str(self.id)
+    
+class Game(db.Document):
+    appid = db.IntField(required=True, unique=True)
+    name = db.StringField(required=True)
+    tags = db.ListField(db.StringField(), default=list)
+    global_rating = db.FloatField(default=0.0)  # 0-10 or 0-100, your choice
+
+    meta = {"collection": "games"}
+
