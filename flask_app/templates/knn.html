@@ -19,7 +19,7 @@
       <ol>
         {% for r in recs %}
           <li>
-            <strong>{{ r.name }}</strong> (neighbor votes: {{ r.votes }})<br>
+            <strong>{{ r.name }}</strong> (score: {{ r.score }})<br>
             Tags: {{ r.tags|join(", ") if r.tags else "None" }}
 
             {% if r.appid in pinned %}

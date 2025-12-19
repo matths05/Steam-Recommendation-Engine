@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Genre: {{ tag }}{% endblock %}
+
+{% block content %}
+  <h1>Genre/Tag: {{ tag }}</h1>
+
+  {% if games and games|length > 0 %}
+    <ul>
+      {% for g in games %}
+        <li>
+          <a href="{{ url_for('explore.game_detail', appid=g.appid) }}">{{ g.name }}</a>
+          (rating: {{ g.global_rating }})
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No games found for this tag yet. (Your database may not have enriched many games.)</p>
+  {% endif %}
+{% endblock %}

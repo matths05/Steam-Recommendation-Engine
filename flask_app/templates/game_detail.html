@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ game.name }}{% endblock %}
+
+{% block content %}
+  <h1>{{ game.name }}</h1>
+
+  <p><strong>AppID:</strong> {{ game.appid }}</p>
+
+  <p><strong>Tags:</strong>
+    {% if game.tags and game.tags|length > 0 %}
+      {% for t in game.tags %}
+        <a href="{{ url_for('explore.genre_page', tag=t) }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    {% else %}
+      None
+    {% endif %}
+  </p>
+
+  <p><strong>Global rating:</strong> {{ game.global_rating }}</p>
+
+  <p><a href="{{ url_for('engine.wishlist') }}">Back to Wishlist</a></p>
+{% endblock %}

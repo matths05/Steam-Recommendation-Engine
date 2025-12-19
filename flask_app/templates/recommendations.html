@@ -9,7 +9,7 @@
   <ol>
     {% for r in recs %}
       <li>
-        <strong>{{ r.name }}</strong>
+        <strong><a href="{{ url_for('explore.game_detail', appid=r.appid) }}">{{ r.name }}</a></strong>
         (score: {{ r.score }}, rating: {{ r.global_rating }})
         <br>
         Tags: {{ r.tags|join(", ") if r.tags else "None" }}

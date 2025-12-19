@@ -46,5 +46,7 @@ def create_app():
     from .engine_routes import engine
     app.register_blueprint(engine)
 
+    from .explore_routes import explore
+    app.register_blueprint(explore)
 
     return app

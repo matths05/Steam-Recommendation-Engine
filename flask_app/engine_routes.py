@@ -4,6 +4,7 @@ from .models import Game, User
 from flask_wtf import FlaskForm
 from sklearn.neighbors import NearestNeighbors
 from .recommender import build_tag_vocab, build_training_data, user_to_vector
+from .steam_store_api import fetch_app_details
 
 engine = Blueprint("engine", __name__, url_prefix="/engine")
 
@@ -239,32 +240,53 @@ def knn_page():
         neighbor_ids.append(uid)
         neighbors_info.append({"user_id": uid, "distance": float(dist), "similarity": round(1 - float(dist), 3)})
 
-    neighbors = list(User.objects(id__in=neighbor_ids).only("email", "pinned_games"))
+    neighbors = list(User.objects(id__in=neighbor_ids).only("email", "owned_games", "pinned_games"))
     by_id = {str(u.id): u for u in neighbors}
 
-    # Recommend neighbor pinned games
+    # Recommend from neighbors' owned libraries (not just pins)
     my_owned_ids = {g.get("appid") for g in (current_user.owned_games or []) if g.get("appid") is not None}
     my_pins = set(current_user.pinned_games or [])
 
-    votes = {}
+    scores = {}  # appid -> float score
+
     for info in neighbors_info:
         u = by_id.get(info["user_id"])
         if not u:
             continue
-        for appid in (u.pinned_games or []):
+
+        sim = info["similarity"]  # 0..1
+        for og in (u.owned_games or []):
+            appid = og.get("appid")
+            if appid is None:
+                continue
             if appid in my_owned_ids or appid in my_pins:
                 continue
-            votes[appid] = votes.get(appid, 0) + 1
 
-    rec_ids = sorted(votes.keys(), key=lambda a: votes[a], reverse=True)[:10]
+            hours = (og.get("playtime_forever", 0) or 0) / 60.0
+
+            # Score contribution: similarity-weighted hours (cap hours so one game doesn't dominate)
+            contrib = sim * min(hours, 100)
+
+            scores[appid] = scores.get(appid, 0.0) + contrib
+
+    rec_ids = sorted(scores.keys(), key=lambda a: scores[a], reverse=True)[:10]
+    missing = [appid for appid in rec_ids if not Game.objects(appid=appid).first()]
+    for appid in missing:
+        details = fetch_app_details(appid)
+        if details:
+            Game(appid=details["appid"], name=details["name"], tags=details["tags"], global_rating=0.0).save()
     games = list(Game.objects(appid__in=rec_ids))
     by_game = {g.appid: g for g in games}
 
     recs = []
     for appid in rec_ids:
         g = by_game.get(appid)
-        if g:
-            recs.append({"appid": appid, "name": g.name, "tags": g.tags, "votes": votes[appid]})
+        recs.append({
+            "appid": appid,
+            "name": g.name if g else f"AppID {appid}",
+            "tags": g.tags if g else [],
+            "score": round(scores[appid], 2),
+        })
 
     # Add neighbor emails
     for info in neighbors_info:
