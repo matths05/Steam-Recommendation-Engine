@@ -1,3 +1,4 @@
+URL: <https://steam-recommendation-engine.vercel.app/>
 # Steam Recommendation Engine
 
 A personalized game recommender system. Users log in via Steam, and the app imports their entire play history (hours played per game). It uses a K-Nearest Neighbors (KNN) algorithm to find other games in the database with similar categories, and suggests games they played that you haven't and are highly rated.
